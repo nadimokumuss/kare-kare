@@ -1,0 +1,66 @@
+<!doctype html><html lang="tr"><meta charset="utf-8"><title>Kare Kare integration fixture</title><link rel="stylesheet" href="/content.css">
+<style>body{background:#242c27;color:#e6eddf;font:14px system-ui;padding:24px}#board-play-computer{position:relative;width:480px;height:480px;background:repeating-conic-gradient(#b1c58d 0 25%,#eeeecb 0 50%) 0/25% 25%}.piece{position:absolute;width:60px;height:60px;font-size:36px;display:grid;place-items:center;color:#121a12;text-shadow:1px 1px white}.move-list{max-width:480px;padding:10px}#integration-result{white-space:pre-wrap;overflow-wrap:anywhere;max-width:480px}</style>
+<h1>Yerel entegrasyon denemesi</h1><p>Gerçek oyun ve ses hizmeti yok. Tahta, motor cevapları ve Chrome köprüsü test verisidir.</p>
+<nav><a href="/member/alice">alice</a></nav><div data-cy="opponent-name">Fixture Bot</div><div data-cy="opponent-rating">1000</div><div data-cy="time-control">10+5</div><button id="new-game" type="button">New game</button><input id="chat-input" aria-label="Fixture chat"><div id="board-play-computer"></div><div class="move-list"></div><pre id="integration-result">Bekleniyor</pre>
+<script>
+window.fixtureErrors=[];window.fixtureSpeech=[];window.fixtureDownloads=[];window.fixtureNativeKeys=0;window.fixtureConnections=0;window.fixtureDropNext=false;window.fixtureHoldSpeech=false;window.fixtureActive=null;
+window.addEventListener('error',event=>fixtureErrors.push(event.message));window.addEventListener('unhandledrejection',event=>fixtureErrors.push(String(event.reason)));
+const listeners=[];window.chrome=window.chrome||{};chrome.storage={onChanged:{addListener:fn=>listeners.push(fn),removeListener:fn=>{const i=listeners.indexOf(fn);if(i>=0)listeners.splice(i,1)}},local:{get:async key=>({[key]:JSON.parse(localStorage.getItem('fixture:'+key)||'null')}),set:async values=>{const changes={};for(const [key,value]of Object.entries(values)){localStorage.setItem('fixture:'+key,JSON.stringify(value));changes[key]={newValue:structuredClone(value)}}queueMicrotask(()=>listeners.forEach(fn=>fn(changes,'local')))}}};
+chrome.runtime={id:'ui-fixture',getManifest:()=>({version:'__KARE_VERSION__'}),getURL:name=>'/'+name,connect(){fixtureConnections++;const callbacks=[];let active=null;const emit=data=>callbacks.forEach(fn=>fn(data));return{onMessage:{addListener:fn=>callbacks.push(fn)},onDisconnect:{addListener(){}},disconnect(){},postMessage(message){if(message.type==='speak'&&fixtureDropNext){fixtureDropNext=false;throw Error('Disconnected port')}if(message.type==='voices')queueMicrotask(()=>emit({type:'voices',voices:[{name:'Fixture',voiceURI:'Fixture',lang:'tr-TR',localService:true}]}));if(message.type==='cancel'){if(fixtureActive?.emit===emit)fixtureActive=null;active=null;}if(message.type==='speak'){active=message.id;fixtureSpeech.push(message.text);const request={id:message.id,text:message.text,emit,finish(){if(active===message.id){active=null;if(fixtureActive===request)fixtureActive=null;emit({type:'event',id:message.id,event:'end'})}}};fixtureActive=request;queueMicrotask(()=>{if(active===message.id){emit({type:'event',id:message.id,event:'start',voice:'Fixture'});if(!fixtureHoldSpeech)setTimeout(()=>request.finish(),5)}})}}}}};
+document.addEventListener('keydown',event=>{if(['x','z'].includes(event.key))fixtureNativeKeys++});
+const blobs=new Map(),createURL=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{const url=createURL(blob);blobs.set(url,blob);return url};HTMLAnchorElement.prototype.click=function(){fixtureDownloads.push({name:this.download,blob:blobs.get(this.href)})};
+</script>
+<script type="module">
+import {Chess} from '/chess.js';
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const check=(value,message)=>{if(!value)throw Error(message)};
+async function until(predicate,label,timeout=6000){let elapsed=0;while(!predicate()){await wait(40);elapsed+=40;if(elapsed>timeout)throw Error('Timeout: '+label)}}
+const game=new Chess(),state=JSON.parse(localStorage.getItem('fixture-stage')||'null');
+function render(moves){game.reset();for(const san of moves)game.move(san);const board=document.querySelector('#board-play-computer');board.replaceChildren();for(const piece of game.board().flat().filter(Boolean)){const node=document.createElement('div');node.className='piece '+piece.color+piece.type+' square-'+(piece.square.charCodeAt(0)-96)+piece.square[1];const flipped=board.classList.contains('flipped'),file=piece.square.charCodeAt(0)-97,rank=Number(piece.square[1])-1;node.style.width='12.5%';node.style.height='12.5%';node.style.left=((flipped?7-file:file)*12.5)+'%';node.style.bottom=((flipped?7-rank:rank)*12.5)+'%';node.textContent=({p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚'})[piece.type];board.append(node)}const list=document.querySelector('.move-list');list.replaceChildren();for(const move of game.history({verbose:true})){const span=document.createElement('span');span.className='move-text';span.textContent=move.san+' ';span.dataset.piece=move.color+move.piece;list.append(span)}}
+render(state?.phase==='reload'?['f3','e5','g4','Qh4#']:[]);
+document.querySelector('#new-game').addEventListener('click',()=>render([]));
+const script=document.createElement('script');script.src='/content.js';document.body.append(script);
+const key=async value=>{document.activeElement?.blur?.();document.body.dispatchEvent(new KeyboardEvent('keydown',{key:value,bubbles:true,cancelable:true}));await wait(80)};
+const journal=()=>JSON.parse(localStorage.getItem('fixture:kareKareMatchJournalV1')||'null');
+const completed=()=>journal()?.matches.filter(match=>match.finished)||[];
+const firstSAN=()=>document.querySelector('.kk-move')?.textContent||'';
+if(window.fixturePanelTest){
+ const {run}=await import('/panel-fixture-tests.js');await run({game,render,key,wait,until,check});
+}else{
+try{
+await until(()=>document.querySelector('#kare-kare-coach'),'mount');const panel=document.querySelector('#kare-kare-coach');
+if(state?.phase!=='reload'){
+ await until(()=>panel.querySelectorAll('.kk-card').length===3,'initial candidates');
+ for(const letter of ['q','w','e','a','s','d','f','g','r','t','b']){const n=fixtureSpeech.length;await key(letter);check(fixtureSpeech.length>n,'manual '+letter)}
+ const connectionBefore=fixtureConnections,speechBefore=fixtureSpeech.length;fixtureDropNext=true;await key('q');await until(()=>fixtureConnections>connectionBefore&&fixtureSpeech.length>speechBefore,'automatic speech reconnect');panel.querySelector('.kk-test-voice').click();await until(()=>fixtureConnections>connectionBefore+1,'explicit speech reset');await wait(80);
+ panel.querySelector('.kk-minimize').click();const n=fixtureSpeech.length;await key('q');check(fixtureSpeech.length>n,'collapsed speech');await key(' ');check(panel.querySelector('.kk-arrows').getAttribute('aria-pressed')==='true','single space arrows');check(document.querySelector('#kk-board-arrows'),'arrow overlay');panel.querySelector('.kk-minimize').click();
+ const input=document.querySelector('#chat-input'),before=fixtureSpeech.length;input.dispatchEvent(new KeyboardEvent('keydown',{key:'q',bubbles:true,cancelable:true}));await wait(80);check(fixtureSpeech.length===before,'typing guard');
+ await key('x');await key('z');check(fixtureNativeKeys===2,'native X/Z remain available');
+ const guided=panel.querySelector('.kk-hide-moves');guided.checked=true;guided.dispatchEvent(new Event('change'));await wait(40);check(panel.querySelector('.kk-hint-level').textContent.includes('1/3'),'target hint');check(getComputedStyle(panel.querySelector('.kk-message')).display!=='none','visible target');
+ for(const letter of ['q','w','e','f','g','b','r']){const n=fixtureSpeech.length;await key(letter);check(!/e dört|de dört|at fe üç/i.test(fixtureSpeech.slice(n).join(' ')),'hint leaked '+letter)}
+ const explicitBefore=fixtureSpeech.length;await key('a');check(/e dört/.test(fixtureSpeech.slice(explicitBefore).join(' ')),'explicit candidate reveal');check(panel.querySelector('.kk-hint-level').textContent.includes('1/3'),'candidate read did not advance hint');
+ await key('h');check(panel.querySelector('.kk-hint-level').textContent.includes('2/3'),'idea hint');await key('h');check(panel.querySelector('.kk-hint-level').textContent.includes('3/3'),'move hint');
+ const custom=panel.querySelector('[data-key-action="comment"]');custom.dispatchEvent(new KeyboardEvent('keydown',{key:'1',bubbles:true,cancelable:true}));panel.querySelector('.kk-keys-save').click();await wait(30);const customBefore=fixtureSpeech.length;await key('1');check(fixtureSpeech.length>customBefore,'custom binding');const oldBefore=fixtureSpeech.length;await key('q');check(fixtureSpeech.length===oldBefore,'old binding removed');panel.querySelector('.kk-keys-reset').click();guided.checked=false;guided.dispatchEvent(new Event('change'));await wait(40);
+ for(let index=1;index<=20;index++){
+  if(index>1){document.querySelector('#new-game').click();await until(()=>firstSAN().includes('e4'),'new initial '+index)}
+  render(['f3']);await until(()=>firstSAN().includes('e5'),'black reply '+index);
+  render(['f3','e5']);await until(()=>firstSAN().includes('Nc3'),'white reply '+index);
+  render(['f3','e5','g4']);await until(()=>firstSAN().includes('Qh4'),'mate opportunity '+index);
+  render(['f3','e5','g4','Qh4#']);await until(()=>completed().length===index&&completed().some(match=>match.ordinal===index&&match.grades.length===2),'completed '+index);
+ }
+ check(completed().length===20,'20 distinct identical bot games');check(panel.querySelector('.kk-milestone').textContent.includes('20.'),'20-game milestone');
+ panel.querySelector('.kk-development-button').click();await until(()=>panel.querySelector('.kk-development').textContent.includes('11–20'),'period report');check(panel.querySelector('.kk-development').textContent.includes('1–10'),'previous period');
+ localStorage.setItem('fixture-stage',JSON.stringify({phase:'reload',speech:fixtureSpeech.length,native:fixtureNativeKeys}));location.reload();
+}else{
+ await until(()=>document.querySelector('.kk-title')?.textContent.includes('kaybettin'),'reload terminal state');await wait(500);check(completed().length===20,'reload did not duplicate a game');check(completed().every(match=>match.grades.length===2),'reload retained grade coverage');
+ panel.querySelector('.kk-development-button').click();await until(()=>panel.querySelector('.kk-development').textContent.includes('11–20'),'restored stats');
+ panel.querySelector('.kk-journal-export').click();await until(()=>fixtureDownloads.length>0,'export');const exported=JSON.parse(await fixtureDownloads.at(-1).blob.text());check(exported.total===20&&exported.matches.length===20,'export contains all moves and games');check(exported.matches.every(match=>match.moves.length===4),'full move records');
+ panel.querySelector('.kk-journal-delete').click();check(!panel.querySelector('.kk-delete-confirm').hidden,'delete requires confirmation');panel.querySelector('.kk-delete-no').click();check(completed().length===20,'cancel deletion');
+ panel.querySelector('.kk-journal-delete').click();panel.querySelector('.kk-delete-yes').click();await until(()=>completed().length===0,'confirmed deletion');check(panel.querySelector('.kk-recording').checked===false,'recording stopped after deletion');
+ check(!panel.textContent.includes('Çalışma konumunu')&&!panel.textContent.includes('Alıştırma'),'no exercises');check(fixtureErrors.length===0,'runtime errors '+fixtureErrors.join(';'));
+ const result={passed:true,manualSections:11,collapsedKeys:true,nativeXZPreserved:state.native===2,guidedHints:true,customKeys:true,speechRecovery:true,identicalBotGames:20,nonoverlappingPeriods:true,reloadDeduplicated:true,exportedGames:exported.matches.length,deleteConfirmed:true,errors:fixtureErrors};document.querySelector('#integration-result').textContent=JSON.stringify(result);document.body.dataset.integration='passed';
+ panel.querySelector('.kk-menu').open=true;panel.querySelector('.kk-preferences').open=true;panel.querySelector('.kk-key-settings').open=true;
+}
+}catch(error){document.querySelector('#integration-result').textContent=JSON.stringify({passed:false,error:error.message,errors:fixtureErrors,completed:completed().length});document.body.dataset.integration='failed'}
+}
+</script></html>

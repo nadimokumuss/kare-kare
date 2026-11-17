@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Kare Kare — Chess.com Bot Koçu",
+  "version": "0.13.1",
+  "description": "Chess.com bot oyunlarında konumu yorumlayan, aday hamleleri açıklayan Türkçe sesli satranç koçu.",
+  "permissions": [
+    "storage",
+    "tts"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.chess.com/play/computer*",
+        "https://www.chess.com/tr/play/computer*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "engine.html",
+        "engine.js"
+      ],
+      "matches": [
+        "https://www.chess.com/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "speech-worker.js",
+    "type": "module"
+  },
+  "minimum_chrome_version": "101"
+}

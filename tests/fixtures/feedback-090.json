@@ -1,0 +1,8 @@
+{
+  "pgns": [
+    "[Event \"?\"]\n[Site \"?\"]\n[Date \"????.??.??\"]\n[Round \"?\"]\n[White \"?\"]\n[Black \"?\"]\n[Result \"*\"]\n\n1. e4 e6 2. Nf3 d5 3. e5 c5 4. Bb5+ Nc6 5. d4 Qb6 6. Nc3 a6 7. Bxc6+ bxc6 8. dxc5 Bxc5 9. O-O f6 10. Na4 Qb4 11. c3 Qb5 12. Nxc5 Qxc5 13. Be3 Qb5 14. Re1 Qxb2 15. Bc5 Qxc3 16. Rc1 Qa5 17. Nd4 Bd7 18. exf6 Nxf6 19. Nxe6 Bxe6 20. Rxe6+ Kf7 21. Re7+ Kg6 22. Qd3+ Ne4 23. Bd4 Rhg8 24. Rxc6+ Kf5 25. Re5+ Kg4 26. Qf3+ Kh4 27. Qf4# *",
+    "[Event \"?\"]\n[Site \"?\"]\n[Date \"????.??.??\"]\n[Round \"?\"]\n[White \"?\"]\n[Black \"?\"]\n[Result \"*\"]\n\n1. e4 e5 2. Nf3 Nc6 3. d3 Bc5 4. Bg5 Nf6 5. Nc3 h6 6. Bh4 g5 7. Bg3 d6 8. h3 Nh5 9. Nd5 Nxg3 10. fxg3 Ne7 11. h4 g4 12. Nf6+ Kf8 13. Nd2 h5 14. Nb3 Rh6 15. Nd5 Nxd5 16. exd5 c6 17. dxc6 Be3 18. cxb7 Bxb7 19. c3 Rf6 20. d4 Bf2+ 21. Kd2 Bxg3 22. Kc2 Bxg2 23. Bxg2 Rf2+ 24. Kd3 Rxg2 25. Rg1 Rxg1 26. Qxg1 Bxh4 27. Rf1 e4+ 28. Kxe4 Qg5 29. Qh1 Re8+ 30. Kd3 Qe3+ 31. Kc4 Rc8+ 32. Kd5 Qe6# *"
+  ],
+  "exchange18Fen": "r3k1nr/3b2pp/p1p1pp2/q1BpP3/3N4/8/P4PPP/2RQR1K1 w kq - 4 18",
+  "exchange19Fen": "r3k2r/3b2pp/p1p1pn2/q1Bp4/3N4/8/P4PPP/2RQR1K1 w kq - 0 19"
+}

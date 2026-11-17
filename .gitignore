@@ -1,0 +1,9 @@
+node_modules/
+extension/dist/
+extension/dist-review/
+release/
+archive/
+.DS_Store
+.venv-voice/
+__pycache__/
+*.pyc

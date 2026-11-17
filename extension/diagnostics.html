@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kare Kare Review Diagnostics</title>
+  <link rel="stylesheet" href="diagnostics.css">
+</head>
+<body>
+  <header><span aria-hidden="true">♞</span><div><h1>Kare Kare</h1><p>Chess.com review diagnostics</p></div></header>
+  <main>
+    <p class="intro">The most recent check from a supported Chess.com page appears below. Refresh the game page after installing or reloading the extension.</p>
+    <dl>
+      <div><dt>Version</dt><dd id="version">—</dd></div>
+      <div><dt>Approved account</dt><dd id="accounts">—</dd></div>
+      <div><dt>Test window</dt><dd id="window">—</dd></div>
+      <div><dt>Last check</dt><dd id="time">No check recorded</dd></div>
+      <div><dt>Page route</dt><dd id="route">—</dd></div>
+      <div><dt>Access</dt><dd id="access">—</dd></div>
+      <div><dt>Board</dt><dd id="board">—</dd></div>
+      <div><dt>Moves</dt><dd id="moves">—</dd></div>
+      <div><dt>Engine</dt><dd id="engine">—</dd></div>
+      <div><dt>Speech state</dt><dd id="speech">—</dd></div>
+      <div><dt>Speech error</dt><dd id="speech-error">—</dd></div>
+      <div><dt>Speech connection</dt><dd id="speech-connection">—</dd></div>
+      <div><dt>Stage</dt><dd id="stage">—</dd></div>
+      <div><dt>Error</dt><dd id="error">—</dd></div>
+    </dl>
+    <button id="export" type="button" disabled>Download diagnostic report</button>
+    <p id="notice" role="status">No report is stored yet.</p>
+    <p class="footnote">The report is stored in this browser only. It may contain a chess position (FEN), but no cookies or page text.</p>
+  </main>
+  <script type="module" src="diagnostics-popup.js"></script>
+</body>
+</html>

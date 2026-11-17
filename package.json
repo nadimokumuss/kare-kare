@@ -1,0 +1,21 @@
+{
+  "name": "satranc-kocu",
+  "private": true,
+  "version": "0.13.1",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-extension.mjs",
+    "package": "npm run build && node scripts/package-extension.mjs",
+    "package:review": "KARE_LIVE_ENABLED=1 node scripts/build-extension.mjs && node scripts/package-review.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:voice": "python3 -m unittest discover -s tests -p 'test_voice_benchmark.py'",
+    "voice:validate": "python3 diagnostics/benchmark-voices.py --backend chatterbox --validate-only"
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0",
+    "stockfish": "^19.0.1"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

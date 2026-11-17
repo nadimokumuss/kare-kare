@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="tr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kare Kare — Bağımsız ses denemesi 2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5ef;color:#17382d;font:16px/1.5 system-ui,sans-serif}main{max-width:850px;margin:36px auto;padding:0 20px}h1{font-size:28px;line-height:1.2}h2{font-size:18px;margin:0 0 8px}p{margin:8px 0}section{background:white;border:1px solid #d4ddcf;border-radius:14px;padding:20px;margin:16px 0}button,select{font:inherit}button{border:0;border-radius:8px;background:#24543f;color:white;padding:10px 16px;cursor:pointer;margin:8px 8px 8px 0}button.secondary{background:#e5ebdf;color:#17382d}select{max-width:100%;padding:8px;border:1px solid #bacab6;border-radius:6px;background:white}small{display:block;color:#4f6558}.result{background:#f0f5eb;padding:9px;border-radius:6px;min-height:42px}.heard{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}label{cursor:pointer}input{accent-color:#24543f}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#162f26;color:#e0eade;border-radius:8px;padding:14px;font:12px/1.6 ui-monospace,monospace;max-height:250px;overflow:auto}audio{display:none}.notice{background:#e8efdf;padding:12px;border-radius:8px}
+</style>
+<main>
+<h1>Kare Kare — Bağımsız ses denemesi 2</h1>
+<p>Bu dosyayı sorunun yaşandığı <strong>Google Chrome</strong> ile aç. Her düğmeye bastıktan sonra ses duyup duymadığını işaretle.</p>
+<p class="notice">Bu deneme uzantıdan bağımsızdır. İnternet, mikrofon veya kurulum gerektirmez. Hiçbir veri otomatik gönderilmez.</p>
+<section><h2>1. Kayıtlı Türkçe ses</h2><p>Önceden üretilmiş bir ses kaydını çalar. Chrome'un normal ses çıkışını sınar.</p><button id="recording">Kaydı çal</button><p class="result" id="recording-status" role="status">Henüz denenmedi.</p><div class="heard"><label><input type="radio" name="recording-heard" value="yes"> Sesi duydum</label><label><input type="radio" name="recording-heard" value="no"> Ses duymadım</label></div><audio id="sample" preload="none" src="data:audio/wav;base64,__SAMPLE_AUDIO__"></audio></section>
+<section><h2>2. Canlı Türkçe konuşma</h2><p>Chrome'un sayfa içi konuşma hizmetini doğrudan çağırır.</p><label>Türkçe ses <select id="voices" aria-label="Türkçe ses"><option value="">Sesler bekleniyor…</option></select></label><br><button id="turkish">Yelda / Türkçe sesi dene</button><button id="refresh" class="secondary">Ses listesini yenile</button><p class="result" id="turkish-status" role="status">Henüz denenmedi.</p><div class="heard"><label><input type="radio" name="turkish-heard" value="yes"> Sesi duydum</label><label><input type="radio" name="turkish-heard" value="no"> Ses duymadım</label></div></section>
+<section><h2>3. Yelda'dan farklı bir yerel ses</h2><p>Türkçe olmayan bir sistem sesini ayrıca sınar. Önce Samantha, Daniel veya başka bir İngilizce ses seçilir.</p><small id="alternate-name">Ses listesi bekleniyor…</small><button id="alternate">Farklı sesi dene</button><p class="result" id="alternate-status" role="status">Henüz denenmedi.</p><div class="heard"><label><input type="radio" name="alternate-heard" value="yes"> Sesi duydum</label><label><input type="radio" name="alternate-heard" value="no"> Ses duymadım</label></div></section>
+<section><h2>4. Ses adı seçmeden Türkçe</h2><p>Yelda adını doğrudan vermeden yalnızca Türkçe dilini ister. Bu deneme, ses seçiminin etkisini ayırır.</p><button id="automatic">Otomatik Türkçe sesi dene</button><button id="stop" class="secondary">Konuşmayı durdur</button><p class="result" id="automatic-status" role="status">Henüz denenmedi.</p><div class="heard"><label><input type="radio" name="automatic-heard" value="yes"> Sesi duydum</label><label><input type="radio" name="automatic-heard" value="no"> Ses duymadım</label></div></section>
+<section><h2>Sonuçları paylaş</h2><p>Denemeleri bitirince raporu indirip sohbetten paylaşabilirsin.</p><button id="export">Ses raporunu indir</button><small>Rapor: deneme olayları, duyma yanıtların, ses adları ve tarayıcı bilgisi. Satranç hesabı, maç, çerez veya kayıtlı mikrofon sesi içermez.</small><details><summary>Teknik kayıt</summary><pre id="log"></pre></details></section>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const results = Object.fromEntries(['recording','turkish','alternate','automatic'].map(key => [key,{state:'not-run',heard:null}]));
+const records=[]; let voiceList=[]; let active=null; let probeNumber=0;
+const synthesis=window.speechSynthesis;
+const log=(type,detail={})=>{records.push({at:new Date().toISOString(),type,...detail});if(records.length>200)records.shift();$('log').textContent=records.map(item=>JSON.stringify(item)).join('\n');};
+const state=()=>synthesis?{speaking:synthesis.speaking,pending:synthesis.pending,paused:synthesis.paused}:null;
+const alternateVoice=()=>{const eligible=voiceList.filter(voice=>voice.localService===true&&!/^tr(?:[-_]|$)/i.test(voice.lang)&&!/yelda/i.test(voice.name));return eligible.find(voice=>/^en(?:[-_]|$)/i.test(voice.lang)&&/samantha/i.test(voice.name))||eligible.find(voice=>/^en(?:[-_]|$)/i.test(voice.lang)&&/daniel/i.test(voice.name))||eligible.find(voice=>/^en(?:[-_]|$)/i.test(voice.lang))||eligible[0]||null;};
+function refresh(){
+  if(!synthesis){$('voices').replaceChildren(new Option('Konuşma hizmeti bulunamadı',''));log('speech-api-unavailable');return;}
+  const selected=$('voices').value;voiceList=synthesis.getVoices();const local=voiceList.filter(voice=>voice.localService===true&&/^tr(?:[-_]|$)/i.test(voice.lang));
+  $('voices').replaceChildren();
+  for(const voice of local)$('voices').append(new Option(`${voice.name} (${voice.lang})${voice.localService?' — yerel':''}`,voice.voiceURI||voice.name));
+  if(!local.length)$('voices').append(new Option('Türkçe ses listelenmedi',''));
+  if(local.some(voice=>(voice.voiceURI||voice.name)===selected))$('voices').value=selected;
+  else {const yelda=local.find(voice=>/yelda/i.test(voice.name));if(yelda)$('voices').value=yelda.voiceURI||yelda.name;}
+  const alternate=alternateVoice();$('alternate-name').textContent=alternate?`Bu denemede kullanılacak ses: ${alternate.name} (${alternate.lang})`:'Yelda dışındaki yerel bir ses bulunamadı.';
+  log('voices',{total:voiceList.length,turkish:local.map(({name,lang,voiceURI,localService,default:preferred})=>({name,lang,voiceURI,localService,default:preferred}))});
+}
+function update(kind,next,text){results[kind].state=next;$(kind+'-status').textContent=text;log(kind,{state:next});}
+function stop(){
+  if(active){clearTimeout(active.timer);update(active.kind,'stopped','Deneme durduruldu.');active=null;}
+  synthesis?.cancel();$('sample').pause();log('manual-stop',{speech:state()});
+}
+function speak(kind){
+  if(!synthesis){update(kind,'unsupported','Chrome konuşma hizmeti bulunamadı.');return;}
+  if(active){$(kind+'-status').textContent='Önce açık denemeyi Konuşmayı durdur ile bitir.';return;}
+  refresh();
+  const voice=kind==='turkish'?voiceList.find(voice=>voice.localService===true&&(voice.voiceURI||voice.name)===$('voices').value)
+    :kind==='alternate'?alternateVoice():null;
+  if(kind==='turkish'&&!voice){update(kind,'no-turkish-voice','Chrome Türkçe bir ses listelemedi.');return;}
+  if(kind==='alternate'&&!voice){update(kind,'no-alternate-voice','Chrome Yelda dışındaki yerel bir ses listelemedi.');return;}
+  const id=++probeNumber;
+  const utterance=new SpeechSynthesisUtterance(kind!=='alternate'?'Merhaba. Bu bir Türkçe ses denemesidir.':'Hello. This is a voice test.');
+  utterance.lang=voice?.lang||'tr-TR';if(voice)utterance.voice=voice;utterance.rate=1;utterance.pitch=1;utterance.volume=1;
+  const valid=()=>active?.id===id;
+  const finish=(status,message)=>{if(!valid())return;clearTimeout(active.timer);active=null;update(kind,status,message);};
+  utterance.onstart=()=>{if(valid()){active.started=true;update(kind,'started','Chrome konuşmanın başladığını bildirdi. Duyup duymadığını ayrıca işaretle.');}};
+  utterance.onend=()=>finish('ended','Chrome konuşmanın bittiğini bildirdi. Duyup duymadığını işaretle.');
+  utterance.onerror=event=>{if(valid()){log('speech-error',{kind,error:event.error,speech:state()});finish('error',`Konuşma hatası: ${event.error}`);}};
+  utterance.onboundary=event=>{if(valid())log('speech-progress',{kind,charIndex:event.charIndex});};
+  active={id,kind,utterance,started:false,timer:setTimeout(()=>{if(!valid())return;const started=active.started;update(kind,started?'completion-not-reported':'start-not-reported',started?'Chrome bitişi bildirmedi. Duyduğunu işaretle; sonra Konuşmayı durdur düğmesine bas.':'20 saniyede başlangıç bildirimi gelmedi. Duyduğunu işaretle; sonra Konuşmayı durdur düğmesine bas.');log('timeout',{kind,speech:state()});},20000)};
+  update(kind,'requested','Konuşma isteniyor…');log('speech-request',{kind,voice:voice?{name:voice.name,lang:voice.lang,localService:voice.localService}:null,language:utterance.lang,explicitVoice:!!voice,speech:state()});
+  try{if(synthesis.paused)synthesis.resume();synthesis.speak(utterance);}catch(error){log('speech-exception',{message:error.message});finish('exception',error.message);}
+}
+$('recording').onclick=async()=>{try{$('sample').currentTime=0;update('recording','requested','Ses kaydı başlatılıyor…');await $('sample').play();}catch(error){log('recording-error',{name:error.name,message:error.message});update('recording','error',`Kayıt çalınamadı: ${error.message}`);}};
+$('sample').onplaying=()=>update('recording','playing','Chrome kaydı çalıyor. Sesi duyup duymadığını işaretle.');
+$('sample').onended=()=>update('recording','ended','Kayıt bitti. Sesi duyup duymadığını işaretle.');
+$('turkish').onclick=()=>speak('turkish');$('alternate').onclick=()=>speak('alternate');$('automatic').onclick=()=>speak('automatic');$('stop').onclick=stop;$('refresh').onclick=refresh;
+for(const input of document.querySelectorAll('input[type=radio]'))input.onchange=()=>{const kind=input.name.replace('-heard','');results[kind].heard=input.value==='yes';log('heard',{kind,heard:results[kind].heard});};
+$('export').onclick=()=>{const report={probe:'kare-kare-standalone-audio-v2',at:new Date().toISOString(),userAgent:navigator.userAgent,results,records,speech:state()};const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='kare-kare-bagimsiz-ses-raporu-v2.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);};
+synthesis?.addEventListener('voiceschanged',refresh);window.addEventListener('beforeunload',()=>{if(active)synthesis?.cancel();});
+log('opened',{protocol:location.protocol,userAgent:navigator.userAgent,speech:state()});refresh();
+</script>
+</html>

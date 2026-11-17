@@ -1,0 +1,44 @@
+{
+  "pgn": "[Event \"?\"]\n[Site \"?\"]\n[Date \"????.??.??\"]\n[Round \"?\"]\n[White \"?\"]\n[Black \"?\"]\n[Result \"*\"]\n\n1. e4 c6 2. d4 d5 3. exd5 c5 4. dxc5 Qa5+ 5. Nc3 Qxc5 6. Be3 Qb4 7. a3 Qxb2 8. Nge2 Bf5 9. Ra2 Bxc2 10. Rxb2 Bxd1 11. Nxd1 Nf6 12. Nec3 b6 13. g3 e6 14. Bg2 exd5 15. Nxd5 Bxa3 16. Nc7+ Ke7 17. Re2 Bb4+ 18. Bd2+ Kd7 19. Nxa8 Bxd2+ 20. Rxd2+ Ke6 21. Nc7+ Kf5 22. Ne3+ Kg6 23. O-O Nc6 24. Bxc6 Rc8 25. Ncd5 Rxc6 26. Ne7+ Kg5 27. Nxc6 Ne4 28. Rd5+ Kf6 29. f3 Nc3 30. Rf5+ Ke6 31. Re5+ Kd6 32. Nd4 Kxe5 *",
+  "kd7": {
+    "record": {
+      "san": "Kd7",
+      "uci": "e7d7",
+      "color": "b",
+      "number": 18,
+      "ply": 36,
+      "beforeFen": "rn5r/p1N1kppp/1p3n2/8/1b6/6P1/3BRPBP/3NK2R b K - 5 18",
+      "afterFen": "rn5r/p1Nk1ppp/1p3n2/8/1b6/6P1/3BRPBP/3NK2R w K - 6 19",
+      "legalCount": 5
+    },
+    "best": {
+      "uci": "e7d7",
+      "san": "Kd7",
+      "from": "e7",
+      "to": "d7",
+      "kind": "Tehdit",
+      "why": "c7 karesindeki ata baskı kurar.",
+      "motifs": [],
+      "answer": "Nxa8",
+      "answerWhy": "a8 karesindeki kaleyi alır",
+      "answerUci": "c7a8",
+      "answerFrom": "c7",
+      "answerTo": "a8",
+      "continuation": "Bxd2+",
+      "continuationWhy": "Şah çekerek rakibi hemen cevap vermeye zorlar.",
+      "continuationUci": "b4d2",
+      "continuationFrom": "b4",
+      "continuationTo": "d2",
+      "depth": 15,
+      "score": {
+        "type": "cp",
+        "value": -798
+      }
+    },
+    "actualScore": {
+      "type": "cp",
+      "value": -879
+    }
+  },
+  "bishopForkFen": "8/1ppk4/3n2r1/Q7/P1Np2bp/1P6/2P3PP/2R2K2 b - - 1 28"
+}

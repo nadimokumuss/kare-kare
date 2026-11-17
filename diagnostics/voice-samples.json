@@ -1,0 +1,8 @@
+[
+  {"id":"grade","text":"En güçlü devamı buldun. Rakip şimdi şahını savunmak zorunda."},
+  {"id":"fork","text":"Atını ce beş karesine getirerek şah ile vezire aynı anda saldırabilirsin."},
+  {"id":"mate","text":"Rakip için iki hamlede zorunlu şah matı var. Önce bu tehlikeyi gider."},
+  {"id":"conditional","text":"Sen piyonu ge beş karesine sürersen, rakip atını ce üç karesine geliştirebilir."},
+  {"id":"defender","text":"Savunucuyu uzaklaştırma fırsatı var. Fil çekilince kaleyi kazançlı biçimde alabilirsin."},
+  {"id":"history","text":"Geçmiş konum. Önceki hamlende bir çatal fırsatı hesaplanmıştı. Ayrıntı kritik notlarda."}
+]

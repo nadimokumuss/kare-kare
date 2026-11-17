@@ -1,0 +1,9 @@
+<!doctype html><html><script type="module">
+import {Chess} from '/chess.js';
+const uci=move=>move.from+move.to+(move.promotion||'');
+const forkGame=new Chess('rn3Qn1/1k1q2p1/p1p1N3/1p1p4/3P4/4B2r/PP2BP1P/2KR3R w - - 1 21'),forkMoves=new Map();for(const san of ['Nc5+','Kc7','Nxd7','Nxd7']){const before=forkGame.fen(),move=forkGame.move(san);forkMoves.set(before.split(' ')[0],uci(move))}
+function preferred(game){const moves=game.moves({verbose:true}),ply=(Number(game.fen().split(' ')[5])-1)*2+(game.turn()==='b'?1:0);const selected=forkMoves.get(game.fen().split(' ')[0]);const choices=selected?[selected]:ply===0?['e2e4','d2d4','g1f3']:ply===1?['e7e5','c7c5','d7d5']:ply===2?['b1c3','e2e4','g2g3']:['d8h4','b8c6','g8f6'];return [...choices.map(value=>moves.find(move=>uci(move)===value)).filter(Boolean),...moves].filter((move,index,all)=>all.findIndex(other=>uci(other)===uci(move))===index)}
+const send=data=>parent.dispatchEvent(new MessageEvent('message',{source:window,origin:'chrome-extension://ui-fixture',data:{source:'kare-kare-engine',...data}}));
+window.postMessage=message=>{if(message.source!=='kare-kare-content'||message.type!=='analyze')return;const game=new Chess(message.fen);let choices=preferred(game);if(message.searchMove)choices=choices.filter(move=>uci(move)===message.searchMove);const lines=choices.slice(0,message.searchMove?1:3).map((first,index)=>{const line=new Chess(message.fen),pv=[uci(first)];line.move(first);for(let n=0;n<3&&!line.isGameOver();n++){const next=preferred(line)[0];if(!next)break;pv.push(uci(next));line.move(next)}return{rank:index+1,depth:16,score:first.san.endsWith('#')?{type:'mate',value:1}:{type:'cp',value:message.searchMove&&['f2f3','g2g4'].includes(message.searchMove)?-350:60-index*10},pv}});setTimeout(()=>send({type:'analysis',id:message.id,lines}),0)};
+send({type:'ready'});
+</script></html>
